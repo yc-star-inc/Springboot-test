@@ -22,3 +22,37 @@ GRANT CREATE SYNONYM, CREATE PUBLIC SYNONYM, DROP PUBLIC SYNONYM TO PPMSDM;
 GRANT CREATE SYNONYM, CREATE PUBLIC SYNONYM, DROP PUBLIC SYNONYM TO PPMSAPPL;
  
  --  GRANT CREATE SYNONYM, CREATE VIEW, CREATE DATABASE LINK, CREATE PUBLIC SYNONYM, DROP PUBLIC SYNONYM TO RESOURCE;
+ 
+ 
+ 
+-- Top N
+This selects one record arbitrarily chosen (where rownum = 1) and then sorts this one record (order by trans_date desc).
+
+As shown by Ivan you can use a subquery where you order the records and then keep the first record with where rownum = 1in the outer query. This, however, is extremely Oracle-specific and violates the SQL standard where a subquery result is considered unordered (i.e. the order by clause can be ignored by the DBMS).
+
+So better go with the standard solution. As of Oracle 12c:
+select * 
+from table_name 
+order by trans_date desc
+fetch first 1 row only;
+
+In older versions:
+select *
+from
+(
+  select t.*, row_number() over (order by trans_date desc) as rn
+  from table_name t
+)
+where rn = 1;
+
+
+
+select * from ppmsdm.rawmat_monitor_result t
+where t.case_id in (
+    select distinct t.case_id from PPMSDM.RAWMAT_MONITOR_RESULT t 
+    where t.MEAS_DATA_TYPE in ('FAC') and t.job_status in (0) 
+    order by t.last_chk_dt
+    fetch first 3 rows only
+)
+
+
