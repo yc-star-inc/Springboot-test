@@ -49,10 +49,12 @@ where rn = 1;
 
 select * from ppmsdm.rawmat_monitor_result t
 where t.case_id in (
-    select distinct t.case_id from PPMSDM.RAWMAT_MONITOR_RESULT t 
-    where t.MEAS_DATA_TYPE in ('FAC') and t.job_status in (0) 
-    order by t.last_chk_dt
-    fetch first 3 rows only
+    select distinct case_id from (
+        select  /*+ index(PPMSDM.RAWMAT_MONITOR_RESULT IDX_2) */t.case_id, t.last_chk_dt from PPMSDM.RAWMAT_MONITOR_RESULT t 
+        where  t.job_status in (0) and t.MEAS_DATA_TYPE in ('FAC')
+        order by t.last_chk_dt desc
+        fetch first 20 rows only)
+    fetch first 2 rows only
 )
 
 
