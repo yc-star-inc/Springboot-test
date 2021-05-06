@@ -9,6 +9,7 @@ import javax.persistence.TemporalType;
 
 import org.apache.commons.lang3.StringUtils;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.tsmc.prequal.data.model.dto.MonitorCriteriaVo;
@@ -17,6 +18,7 @@ import com.tsmc.prequal.utils.StringUtil;
 
 //import com.fasterxml.jackson.annotation.JsonFormat;
 
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class RawmatMonitorResult {
 
 	public static String writeAsJson(RawmatMonitorResult _curObj) throws JsonProcessingException {

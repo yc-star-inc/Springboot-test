@@ -13,6 +13,7 @@ import org.springframework.jdbc.core.namedparam.SqlParameterSource;
 import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 import org.springframework.jdbc.core.support.SqlLobValue;
 import org.springframework.jdbc.support.lob.DefaultLobHandler;
+import org.springframework.jdbc.support.lob.LobHandler;
 import org.springframework.stereotype.Repository;
 
 import com.tsmc.prequal.data.model.mapper.RawmatMonitorResultMapper;
@@ -40,7 +41,7 @@ public class PreqMonitorResultDao {
 	private Logger LOG = LoggerFactory.getLogger(PreqMonitorResultDao.class);
 
 	@Autowired
-	private NamedParameterJdbcTemplate jdbcTemplate;
+	private NamedParameterJdbcTemplate namedJdbcTemplate;
 
 	@Autowired
 	private DataSource ecpDataSource;
@@ -53,7 +54,7 @@ public class PreqMonitorResultDao {
 	private String findAllSqlString = String.format("select * from %s", tableNameString);
 
 	public PreqMonitorResultDao(NamedParameterJdbcTemplate jdbcTemplate) {
-		this.jdbcTemplate = jdbcTemplate;
+		this.namedJdbcTemplate = jdbcTemplate;
 	}
 
 	public int insertMonitorResult(RawmatMonitorResult _monRsltObj) {
@@ -99,7 +100,7 @@ public class PreqMonitorResultDao {
 //		final File clobIn = new File("large.txt");
 //		final InputStream clobIs = new FileInputStream(clobIn);
 //		final InputStreamReader clobReader = new InputStreamReader(clobIs);
-//		jdbcTemplate.execute(
+//		namedJdbcTemplate.execute(
 //		  "INSERT INTO ppmsdm.rawmat_monitor_result (, a_clob, a_blob) VALUES (?, ?, ?)",
 //		  new AbstractLobCreatingPreparedStatementCallback(lobHandler) {                                                       (1)
 //		      protected void setValues(PreparedStatement ps, LobCreator lobCreator) 
@@ -117,7 +118,7 @@ public class PreqMonitorResultDao {
 
 	public List<RawmatMonitorResult> findAll() {
 
-		List<RawmatMonitorResult> batchStatusLst = jdbcTemplate.query(findAllSqlString,
+		List<RawmatMonitorResult> batchStatusLst = namedJdbcTemplate.query(findAllSqlString,
 				(new RawmatMonitorResultMapper()));
 
 		return batchStatusLst;
@@ -133,12 +134,12 @@ public class PreqMonitorResultDao {
 		SqlParameterSource parameters = new MapSqlParameterSource().addValue("caseIds", topNCaseIdList);
 
 		List<RawmatMonitorResult> monitorJobList = 
-				jdbcTemplate.query(sqlString, parameters, (new RawmatMonitorResultMapper()));
+				namedJdbcTemplate.query(sqlString, parameters, (new RawmatMonitorResultMapper()));
 
 		return monitorJobList ;
 	}
 
-	// List<RawmatMonitorResult> batchStatusLst = jdbcTemplate.query(sqlString,
+	// List<RawmatMonitorResult> batchStatusLst = namedJdbcTemplate.query(sqlString,
 	// PreparedStatementSetter, (new RawmatMonitorResultMapper()));
 
 //	SqlParameterSource namedParameters = new MapSqlParameterSource().addValue("jobStatus", _jobStatus);
@@ -172,7 +173,7 @@ public class PreqMonitorResultDao {
 		SqlParameterSource parameters = 
 				new MapSqlParameterSource().addValue("jobStatus", _jobStatus).addValue("measDataType", _measDataType);
 
-		List<String> batchStatusLst = jdbcTemplate.query(sqlString, parameters, new RowMapper<String>() {
+		List<String> batchStatusLst = namedJdbcTemplate.query(sqlString, parameters, new RowMapper<String>() {
 
 			@Override
 			public String mapRow(ResultSet rs, int rowNum) throws SQLException {
@@ -185,41 +186,42 @@ public class PreqMonitorResultDao {
 		return batchStatusLst;
 	}
 
-//	public void save(Sale sale) {
-//		SimpleJdbcInsert insertActor = new SimpleJdbcInsert((DataSource) jdbcTemplate);
-//		insertActor.withTableName(tableNameString).usingColumns("item", "quantity", "amount");
-//
-//		BeanPropertySqlParameterSource param = new BeanPropertySqlParameterSource(sale);
-//		insertActor.execute(param);
-//	}
-
-	public List<RawmatMonitorResult> getAll(List<Integer> _caseIdList) {
+	public List<RawmatMonitorResult> getAllByCaseIds(List<Integer> _caseIdList) {
 		//String sql = String.format("select * from %s t where t.case_id = :caseId", tableNameString);
 		
 		String whereClause = String.format(" t where t.case_id in (:caseIds)"); 
 		String sqlString = String.format("%s %s", findAllSqlString, whereClause);		
 
-		SqlParameterSource parameters = new MapSqlParameterSource().addValue("caseId", _caseIdList);
+		SqlParameterSource parameters = new MapSqlParameterSource().addValue("caseIds", _caseIdList);
 
-		List<RawmatMonitorResult> sale = jdbcTemplate.query(sqlString, parameters,
-				BeanPropertyRowMapper.newInstance(RawmatMonitorResult.class));
+		List<RawmatMonitorResult> monRsltList = namedJdbcTemplate.query(sqlString, parameters, (new RawmatMonitorResultMapper())); 
+				//BeanPropertyRowMapper.newInstance(RawmatMonitorResult.class));
 
-		return sale;
+		return monRsltList;
 	}
 	
-	//@SuppressWarnings({ "rawtypes", "unchecked" })
 	public List<RawmatMonitorResult> findAllByCaseId(int id) {
 
 		String sqlString = String.format("select * from %s t where t.case_id = :caseId", tableNameString);
-
+		LOG.info(String.format("%s, caseId: %s", sqlString, id));
+		
 		SqlParameterSource parameters = new MapSqlParameterSource().addValue("caseId", id);
-
-		List<RawmatMonitorResult> sale = jdbcTemplate.query(sqlString, parameters,
-				BeanPropertyRowMapper.newInstance(RawmatMonitorResult.class)); 
-				//new BeanPropertyRowMapper(RawmatMonitorResult.class));
+		List<RawmatMonitorResult> sale = namedJdbcTemplate.query(sqlString, parameters,(new RawmatMonitorResultMapper()));
 
 		return sale;
+	}
 
+	public List<RawmatMonitorResult> findAllByCaseIdAndDataType(Long _caseId, String _measDataType) {
+
+		String sql = String.format("select * from %s t where t.case_id = :caseId and t.meas_data_type=:measDataType", tableNameString);
+
+		SqlParameterSource parameters 
+				= new MapSqlParameterSource().addValue("caseId", _caseId).addValue("measDataType", _measDataType);
+
+		List<RawmatMonitorResult> rsltList = namedJdbcTemplate.query(sql, parameters, (new RawmatMonitorResultMapper()));
+				//new BeanPropertyRowMapper(RawmatMonitorResult.class));
+
+		return rsltList;
 	}
 	
 	
@@ -238,17 +240,18 @@ public class PreqMonitorResultDao {
 				.addValue("monitorCriteria", _updRecord.getMonitorCriteria())
 				.addValue("jobId", _updRecord.getJobId());
 
-		// NamedParameterJdbcTemplate template = new NamedParameterJdbcTemplate(jdbcTemplate);
-		int rowAffected = jdbcTemplate.update(sql, namedParameters);
+		// NamedParameterJdbcTemplate template = new NamedParameterJdbcTemplate(namedJdbcTemplate);
+		int rowAffected = namedJdbcTemplate.update(sql, namedParameters);
 		return rowAffected;
 	}
 
+	/*
 	public void deleteSale(int id) {
 
 		SqlParameterSource parameters = new MapSqlParameterSource().addValue("id", id);
 
 		String sql = "delete from ppmsdm.sales where id = :id";
-		int delRslt = jdbcTemplate.update(sql, parameters);
+		int delRslt = namedJdbcTemplate.update(sql, parameters);
 	}
 
 	public void deleteSaleByItemName(String _item) {
@@ -256,22 +259,11 @@ public class PreqMonitorResultDao {
 		SqlParameterSource parameters = new MapSqlParameterSource().addValue("item", _item);
 
 		String sql = "delete from ppmsdm.sales where item= :item";
-		int delRslt = jdbcTemplate.update(sql, parameters);
+		int delRslt = namedJdbcTemplate.update(sql, parameters);
 	}
+	//*/
 
 
 
-	@SuppressWarnings({ "rawtypes", "unchecked" })
-	public List<RawmatMonitorResult> findAllByCaseIdAndDataType(Long _caseId, String _measDataType) {
 
-		String sql = String.format("select * from %s t where t.case_id = :caseId and t.meas_data_type=:measDataType", tableNameString);
-
-		SqlParameterSource parameters 
-				= new MapSqlParameterSource().addValue("caseId", _caseId).addValue("measDataType", _measDataType);
-
-		List<RawmatMonitorResult> rsltList = jdbcTemplate.query(sql, parameters,
-				new BeanPropertyRowMapper(RawmatMonitorResult.class));
-
-		return rsltList;
-	}
 }
