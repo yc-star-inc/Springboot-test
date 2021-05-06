@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.ort/1999/xhtml"
+		xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8">
+<title>Sales Manager Application</title>
+</head>
+<body>
+
+	<div align="center">
+		<h1>Sales Records</h1>
+		<a href="/new">Enter New Salse</a>
+		<br/>
+		<table border="1" cellpadding="10">
+			<thead> 
+				<tr> 
+					<th>ID</th>
+					<th>Item Name</th>
+					<th>Quantity</th>
+					<th>Amount</th>
+					<th>Actions</th>
+				</tr>
+			</thead> 
+			<tbody> 
+				<tr th:each="Sale: ${listSale}"> 
+					<td th:text="${Sale.id}">ID</td>
+					<td th:text="${Sale.item}">Item Name</td>
+					<td th:text="${Sale.quantity}">Quantity</td>
+					<td th:text="${Sale.amount}">Amount</td>
+					<td>
+						<a th:href="@{'/edit/' + ${Sale.id}}">Edit</a>
+						&nbsp; 
+						<a th:href="@{'/deleteSale/' + ${Sale.id}}">Delete</a>
+					</td>
+	
+				</tr>
+			</tbody>
+		
+		</table>
+
+	</div>
+	<!-- <div align="center"> 
+		<a th:href="@{/barChart">Bar-Chart</a>
+	</div> -->
+	
+</body>
+</html>

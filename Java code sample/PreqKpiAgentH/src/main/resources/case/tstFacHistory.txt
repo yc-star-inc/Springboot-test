@@ -1,0 +1,3 @@
+FAB_NAME;POINT_VALUE;
+String;Real;
+FAB14B;13;
