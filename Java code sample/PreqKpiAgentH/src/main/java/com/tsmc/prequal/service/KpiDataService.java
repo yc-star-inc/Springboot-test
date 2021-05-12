@@ -133,12 +133,11 @@ public class KpiDataService {
 			}
 
 			if (!kpiChkRslt.getOldStatus().equals(kpiChkRslt.getNewStatus())) {
-				
+
 				if (!kpiChkRsltMap.containsKey(curKpiJobKey)) {
-					kpiChkRsltMap.put(curKpiJobKey, kpiChkRslt); 
-				}
-				else {
-					kpiChkRsltMap.replace(curKpiJobKey, kpiChkRslt); 	
+					kpiChkRsltMap.put(curKpiJobKey, kpiChkRslt);
+				} else {
+					kpiChkRsltMap.replace(curKpiJobKey, kpiChkRslt);
 				}
 
 			}
@@ -163,17 +162,18 @@ public class KpiDataService {
 	}
 
 	private Map<String, RawmatPreBatchStatus> getEarliestCases(KpiDataSubjectEnum _dataSubject) {
-		
+
 		List<Integer> targetJobStatusLst = Arrays.asList(0);
-		List<String> targetDataTypes = Arrays.asList("FAC"); 
-		List<String> topNCaseIdList = preqMonRsltDao.findDistTopNCaseIds(targetJobStatusLst, targetDataTypes, 5); 
-		
+		List<String> targetDataTypes = Arrays.asList("FAC");
+		List<String> topNCaseIdList = preqMonRsltDao.findDistTopNCaseIds(targetJobStatusLst, targetDataTypes, 5);
+
 		LOG.info(String.format(">> topNCaseIdList.size(): %s", topNCaseIdList.size()));
 		LOG.info(String.format(">> topNCaseIdList= %s", StringUtils.join(topNCaseIdList, ",")));
-		
-		List<RawmatMonitorResult> topNMonitorJobs = preqMonRsltDao.findTopNJobsByStatusAndDataType(targetJobStatusLst, targetDataTypes, 5); 
+
+		List<RawmatMonitorResult> topNMonitorJobs = preqMonRsltDao.findTopNJobsByStatusAndDataType(targetJobStatusLst,
+				targetDataTypes, 5);
 		LOG.info(String.format(">> topNMonitorJobs.size(): %s", topNMonitorJobs.size()));
-		
+
 		return null;
 	}
 
@@ -187,30 +187,34 @@ public class KpiDataService {
 	}
 
 	private void goInitialTest() throws JsonProcessingException {
+
+		Map<String, String> tmpCriMap = new HashMap<String, String>();
+		tmpCriMap.put("Name", "John");
 		
-		MonitorCriteriaVo newCri = new MonitorCriteriaVo(); 
+		MonitorCriteriaVo newCri = new MonitorCriteriaVo();
 		newCri.setFabName("FAB15B");
 		newCri.setMatNo("L123480");
-		String newMonCriJson = MonitorCriteriaVo.writeAsJson(newCri); 
-		
-		RawmatMonitorResult newMonRslt = new RawmatMonitorResult(); 
+		newCri.setCriteria(tmpCriMap);
+		String newMonCriJson = MonitorCriteriaVo.writeAsJson(newCri);
+		LOG.info(String.format("[Print Class Properties test] %s", newCri.toString()));
+
+		RawmatMonitorResult newMonRslt = new RawmatMonitorResult();
 		newMonRslt.setCaseId(1);
 		newMonRslt.setFabName("FAB15B");
 		newMonRslt.setMeasDataType("FAC");
 		newMonRslt.setMonitorCriteria(newMonCriJson);
-		
-		//preqMonRsltDao.insertMonitorResult(newMonRslt);
-		
-		List<RawmatMonitorResult> curMonJobsList = preqMonRsltDao.findAllByCaseId(1); 
+
+		// preqMonRsltDao.insertMonitorResult(newMonRslt);
+
+		List<RawmatMonitorResult> curMonJobsList = preqMonRsltDao.findAllByCaseId(1);
 		for (Iterator<RawmatMonitorResult> iterator = curMonJobsList.iterator(); iterator.hasNext();) {
 			RawmatMonitorResult curMonJob = (RawmatMonitorResult) iterator.next();
-			LOG.info(String.format("[%s] curMonCriteria: %s, fabName:%s, measDataType: %s", 
-					curMonJob.getJobId(), curMonJob.getMonitorCriteria(), curMonJob.getFabName(), curMonJob.getMeasDataType()));
+			LOG.info(String.format("[%s] curMonCriteria: %s, fabName:%s, measDataType: %s", curMonJob.getJobId(),
+					curMonJob.getMonitorCriteria(), curMonJob.getFabName(), curMonJob.getMeasDataType()));
 		}
-		
-		getEarliestCases(this.DataSubject); 
-		
-		
+
+		getEarliestCases(this.DataSubject);
+
 		/// TODO: Change to Java get method.name
 		String curMehtod = "goInitialTest";
 		LOG.info(String.format("[%s] executed at %s", curMehtod, LocalDateTime.now()));
